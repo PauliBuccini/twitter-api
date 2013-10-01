@@ -45,8 +45,7 @@ TwitterSpark.prototype.callAsApp = function(method, url, params){
 
 TwitterSpark.prototype.getOauthBinding = function() {
   var config = Accounts.loginServiceConfiguration.findOne({service: 'twitter'});
-  console.log(Accounts.twitter)
-  var urls = Accounts.twitter._urls;
+  var urls = this._getUrl;
   return new OAuth1Binding(config.consumerKey, config.secret, urls);
 };
 
