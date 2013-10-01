@@ -1,5 +1,5 @@
 Package.describe({
-  summary: "Twitter-api to use for posting tweets"
+  summary: "Twitter API for Meteor"
 });
 
 Package.on_use(function (api, where) {
