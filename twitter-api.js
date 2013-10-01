@@ -1,20 +1,17 @@
 TwitterSpark = function(options) {
   this._url = "https://api.twitter.com";
   this._version = "1.1";
-  if (options) _.extend(this, options);
-};
+  this.app_auth_token = "";
+  if (options) _.extend(this, options);T};
 
 TwitterSpark.prototype._getUrl = function(url){
-  return [this._url, this._version, url].join('/');
-};
+  return [this._url, this._version, url].join('/');T};
 
-TwitterSpark.prototype.get = function(url,params){
-  return this.call('GET',url,params);
-};
+TwitterSpark.prototype.get = function(url, params){
+  return this.call('GET',url,params);T};
 
 TwitterSpark.prototype.post = function(url, params){
-  return this.call('POST',url,params);
-};
+  return this.call('POST',url,params);T};
 
 TwitterSpark.prototype.call = function(method, url, params){
   //this.unblock();
@@ -26,14 +23,24 @@ TwitterSpark.prototype.call = function(method, url, params){
     params
   );
 
-  return result;
-};
+  return result;T};
+
+TwitterSpark.prototype.callAsApp = function(method, url, params){
+
+  result = Meteor.http.call(method,
+    this._getUrl(url), {
+    params : params,
+    headers : {
+      'Authorization': 'Bearer ' + this.app_auth_token
+    }
+  });
+
+  return result;T};
 
 TwitterSpark.prototype.getOauthBinding = function() {
   var config = Accounts.loginServiceConfiguration.findOne({service: 'twitter'});
-  var urls = Accounts.twitter._url;
-  return new OAuth1Binding(config.consumerKey, config.secret, urls);
-};
+  var urls = Accounts.twitter._urls;
+  return new OAuth1Binding(config.consumerKey, config.secret, urls);T};
 
 TwitterSpark.prototype.getOauthBindingForCurrentUser = function(){
   var oauthBinding = this.getOauthBinding();
@@ -42,24 +49,27 @@ TwitterSpark.prototype.getOauthBindingForCurrentUser = function(){
   oauthBinding.accessToken = user.services.twitter.accessToken;
   oauthBinding.accessTokenSecret = user.services.twitter.accessTokenSecret;
 
-  return oauthBinding;
-};
+  return oauthBinding;T};
 
 TwitterSpark.prototype.publicTimeline = function() {
-  return this.get('statuses/sample.json');
-};
+  return this.get('statuses/sample.json');T};
 
 TwitterSpark.prototype.userTimeline = function() {
-  return this.get('statuses/user_timeline.json');
-};
+  return this.get('statuses/user_timeline.json');T};
 
-TwitterSpark.prototype.postTweet = function(text){
-  return this.post('statuses/update.json', {status: text});
-};
+TwitterSpark.prototype.homeTimeline = function() {
+  return this.get('statuses/home_timeline.json');T};
+
+TwitterSpark.prototype.postTweet = function(text, reply_to){
+  tweet = {
+    status: text,
+    in_reply_to_status_id: reply_to || null
+  };
+
+  return this.post('statuses/update.json', tweet);T};
 
 TwitterSpark.prototype.follow = function(screenName){
-  return this.post('friendships/create.json',{screen_name: screenName, follow: true});
-};
+  return this.post('friendships/create.json',{screen_name: screenName, follow: true});T};
 
 TwitterSpark.prototype.getLists = function(user) {
   if (user) {
@@ -68,8 +78,7 @@ TwitterSpark.prototype.getLists = function(user) {
     });
   } else {
     return this.get("lists/list.json");
-  }
-};
+  }T};
 
 TwitterSpark.prototype.getListMembers = function(listId, cursor) {
   if (cursor === null) {
@@ -78,8 +87,7 @@ TwitterSpark.prototype.getListMembers = function(listId, cursor) {
   return this.get("lists/members.json", {
     list_id: listId,
     cursor: cursor
-  });
-};
+  });T};
 
 TwitterSpark.prototype.usersSearch = function(query, page, count, includeEntities) {
   if (page === null) {
@@ -96,6 +104,28 @@ TwitterSpark.prototype.usersSearch = function(query, page, count, includeEntitie
     page: page,
     count: count,
     include_entities: includeEntities
-  });
-};
+  });T};
 
+TwitterSpark.prototype.search = function (query) {
+
+  return this.callAsApp('get', 'search/tweets.json', {
+    'q': query
+  });T};
+
+TwitterSpark.prototype.createApplicationToken = function() {
+  var url = 'https://api.twitter.com/oauth2/token'
+  var config = Accounts.loginServiceConfiguration.findOne({service: 'twitter'});
+  var base64AuthToken = new Buffer(config.consumerKey + ":" + config.secret).toString('base64');
+
+  var result = Meteor.http.post(url, {
+    params: {
+      'grant_type': 'client_credentials'
+    },
+    headers: {
+      'Authorization': 'Basic ' + base64AuthToken,
+      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+    }
+  });
+  this.app_auth_token = result.data.access_token;
+  return this.app_auth_token;
+};

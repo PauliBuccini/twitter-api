@@ -2,14 +2,12 @@ Package.describe({
   summary: "Twitter-api to use for posting tweets"
 });
 
-Package.on_use(function(api) {
-  api.use('underscore', ['server']);
-  api.use('accounts-base', ['server']);
-  // Export Accounts (etc) to packages using this one.
-  api.use('accounts-oauth', ['server']);
-  api.use('twitter', [ 'server']);
 
-  api.use('http', ['client', 'server']);
+Package.on_use(function (api, where) {
+  api.use('accounts-twitter', 'server');
+  api.use('oauth1', 'server');
 
-  api.add_files('twitter-api.js', 'server');
+  api.export && api.export('TwitterSpark', 'server');
+
+  api.add_files(['twitter-api.js'], 'server');
 });
