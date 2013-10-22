@@ -3,7 +3,7 @@ TwitterSpark = function(options) {
   this._version = "1.1";
   this.app_auth_token = "";
   if (options) _.extend(this, options);
-  // console.log('options', options)
+
 };
 
 TwitterSpark.prototype._getUrl = function(url){
@@ -20,14 +20,7 @@ TwitterSpark.prototype.post = function(url, params){
 
 TwitterSpark.prototype.call = function(method, url, params){
  oauthBinding = this.getOauthBindingForCurrentUser();
-// console.log('method')
-// console.log(method)
-// console.log('this._getUrl(url)')
-// console.log(this._getUrl(url))
-// console.log('params')
-// console.log(params)
-// console.log('oauthBinding')
-// console.log(oauthBinding)
+
 
   result = oauthBinding.call(method,
     this._getUrl(url),
