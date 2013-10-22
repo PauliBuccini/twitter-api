@@ -3,6 +3,7 @@ TwitterSpark = function(options) {
   this._version = "1.1";
   this.app_auth_token = "";
   if (options) _.extend(this, options);
+  // console.log('options', options)
 };
 
 TwitterSpark.prototype._getUrl = function(url){
@@ -18,21 +19,26 @@ TwitterSpark.prototype.post = function(url, params){
 };
 
 TwitterSpark.prototype.call = function(method, url, params){
-  //this.unblock();
-
-  oauthBinding = this.getOauthBindingForCurrentUser();
+ oauthBinding = this.getOauthBindingForCurrentUser();
+// console.log('method')
+// console.log(method)
+// console.log('this._getUrl(url)')
+// console.log(this._getUrl(url))
+// console.log('params')
+// console.log(params)
+// console.log('oauthBinding')
+// console.log(oauthBinding)
 
   result = oauthBinding.call(method,
     this._getUrl(url),
     params
   );
-
   return result;
 };
 
 TwitterSpark.prototype.callAsApp = function(method, url, params){
-
-  result = Meteor.http.call(method,
+this.app_auth_token = this.createApplicationToken();
+  result = HTTP.call(method,
     this._getUrl(url), {
     params : params,
     headers : {
@@ -46,7 +52,8 @@ TwitterSpark.prototype.callAsApp = function(method, url, params){
 TwitterSpark.prototype.getOauthBinding = function() {
   var config = Accounts.loginServiceConfiguration.findOne({service: 'twitter'});
   var urls = this._getUrl;
-  return new OAuth1Binding(config.consumerKey, config.secret, urls);
+
+  return new OAuth1Binding(config, urls);
 };
 
 TwitterSpark.prototype.getOauthBindingForCurrentUser = function(){
@@ -76,8 +83,7 @@ TwitterSpark.prototype.postTweet = function(text, reply_to){
     status: text,
     in_reply_to_status_id: reply_to || null
   };
-
-  return this.post('statuses/update.json', tweet);
+  return this.post('statuses/update.json', {status: text});
 };
 
 TwitterSpark.prototype.follow = function(screenName){
@@ -134,7 +140,7 @@ TwitterSpark.prototype.createApplicationToken = function() {
   var config = Accounts.loginServiceConfiguration.findOne({service: 'twitter'});
   var base64AuthToken = new Buffer(config.consumerKey + ":" + config.secret).toString('base64');
 
-  var result = Meteor.http.post(url, {
+  var result = HTTP.post(url, {
     params: {
       'grant_type': 'client_credentials'
     },

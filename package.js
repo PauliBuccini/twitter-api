@@ -5,6 +5,7 @@ Package.describe({
 Package.on_use(function (api, where) {
   api.use('accounts-twitter', 'server');
   api.use('oauth1', 'server');
+  api.use('http', 'server');
 
   api.export && api.export('TwitterSpark', 'server');
 
